@@ -16,7 +16,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'md', className = '' }) => {
   return (
     <div className={`font-bold tracking-tighter ${className}`}>
       <img 
-        src="/lovable-uploads/e8aaa7e3-94a8-4a94-a1d9-91c89053d04c.png" 
+        src="/lovable-uploads/f922661b-bf08-44a6-ac07-10e9c71a2d51.png" 
         alt="OneShell" 
         className={`${sizeClasses[size]}`} 
       />
