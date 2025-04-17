@@ -17,11 +17,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({ title, description, icon: Ico
       variant="outline"
       className={cn(
         "flex flex-col items-center justify-center p-6 h-full w-full text-center group",
-        "hover:border-primary hover:bg-accent transition-colors duration-300"
+        "border-2 border-transparent hover:border-oneblaze-green-hover hover:bg-oneblaze-dark transition-colors duration-300 shadow-lg",
+        "hover:shadow-[0_0_15px_rgba(0,255,153,0.2)]"
       )}
       onClick={onClick}
     >
-      <div className="mb-4 p-4 rounded-full bg-background text-foreground group-hover:text-primary transition-colors duration-300">
+      <div className="mb-4 p-4 rounded-full bg-oneblaze-dark text-oneblaze-text group-hover:text-oneblaze-green-hover transition-colors duration-300">
         <IconComponent size={32} />
       </div>
       <h3 className="text-xl font-semibold mb-2">{title}</h3>

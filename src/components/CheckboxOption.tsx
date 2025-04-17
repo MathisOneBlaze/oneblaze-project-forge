@@ -17,6 +17,7 @@ const CheckboxOption: React.FC<CheckboxOptionProps> = ({ id, label, checked, onC
         id={id}
         checked={checked}
         onCheckedChange={onChange}
+        className="border-oneblaze-light data-[state=checked]:bg-oneblaze-green-hover data-[state=checked]:border-oneblaze-green-hover"
       />
       <Label htmlFor={id} className="text-sm">{label}</Label>
     </div>
