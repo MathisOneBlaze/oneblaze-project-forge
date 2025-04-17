@@ -1,5 +1,7 @@
 
 import React from 'react';
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface CheckboxOptionProps {
   id: string;
@@ -10,15 +12,13 @@ interface CheckboxOptionProps {
 
 const CheckboxOption: React.FC<CheckboxOptionProps> = ({ id, label, checked, onChange }) => {
   return (
-    <div className="flex items-center mb-2">
-      <input
+    <div className="flex items-center space-x-3 my-2">
+      <Checkbox
         id={id}
-        type="checkbox"
         checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="oneblaze-checkbox mr-3"
+        onCheckedChange={onChange}
       />
-      <label htmlFor={id} className="text-sm">{label}</label>
+      <Label htmlFor={id} className="text-sm">{label}</Label>
     </div>
   );
 };

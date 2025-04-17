@@ -1,13 +1,14 @@
 
 import React from 'react';
 import { Music, Video, PenTool, Code, Gamepad2, BookOpen, BookText, Mic, FileSpreadsheet, FolderPlus } from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 import ProjectCard from './ProjectCard';
 
 interface ProjectType {
   id: string;
   title: string;
   description: string;
-  icon: React.ComponentType<any>;
+  icon: LucideIcon;
 }
 
 const projectTypes: ProjectType[] = [

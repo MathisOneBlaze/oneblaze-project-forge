@@ -3,6 +3,7 @@ import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import ProjectFormBody from './ProjectFormBody';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 
 interface ProjectFormProps {
   projectType: string;
@@ -44,19 +45,20 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ projectType, onBack }) => {
   return (
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center mb-8">
-        <button 
+        <Button 
+          variant="ghost"
           onClick={onBack} 
-          className="flex items-center text-oneblaze-text hover:text-oneblaze-green-hover transition-colors"
+          className="flex items-center hover:text-primary transition-colors"
         >
           <ArrowLeft size={20} className="mr-2" />
           <span>Retour</span>
-        </button>
+        </Button>
         <h2 className="text-2xl font-bold ml-auto mr-auto">
-          Création d'un projet <span className="text-oneblaze-green-hover">{getProjectTypeName(projectType)}</span>
+          Création d'un projet <span className="text-primary">{getProjectTypeName(projectType)}</span>
         </h2>
       </div>
       
-      <div className="bg-oneblaze-light rounded-xl p-6 shadow-lg">
+      <div className="bg-card rounded-xl p-6 shadow-lg">
         <ProjectFormBody projectType={projectType} onSubmit={handleSubmit} />
       </div>
     </div>

@@ -4,6 +4,7 @@ import Logo from '@/components/Logo';
 import ProjectTypeSelection from '@/components/ProjectTypeSelection';
 import ProjectForm from '@/components/ProjectForm';
 import { Dices, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const [selectedProjectType, setSelectedProjectType] = useState<string | null>(null);
@@ -22,14 +23,14 @@ const Index = () => {
         <div className="flex justify-between items-center">
           <Logo size="lg" className="animate-float" />
           <div className="flex gap-3">
-            <button className="oneblaze-button flex items-center gap-2 py-2">
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
               <Dices size={18} />
               <span className="hidden sm:inline">Templates</span>
-            </button>
-            <button className="oneblaze-button flex items-center gap-2 py-2">
+            </Button>
+            <Button variant="outline" size="sm" className="flex items-center gap-2">
               <Settings size={18} />
               <span className="hidden sm:inline">Paramètres</span>
-            </button>
+            </Button>
           </div>
         </div>
         
