@@ -1,17 +1,74 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Logo from '@/components/Logo';
 import ProjectTypeSelection from '@/components/ProjectTypeSelection';
 import ProjectForm from '@/components/ProjectForm';
-import { Dices, Settings } from 'lucide-react';
+import { Dices, Settings, FolderPlus, FileEdit, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/components/ui/use-toast';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+// Define schemas for our forms
+const masterShellFormSchema = z.object({
+  masterShellPath: z.string().min(1, "Le chemin du dossier MasterShell est requis")
+});
+
+const templateFormSchema = z.object({
+  templateName: z.string().min(3, "Le nom du template doit contenir au moins 3 caractères"),
+  templateDescription: z.string().min(10, "La description doit contenir au moins 10 caractères"),
+  templateBaseType: z.string().min(1, "Veuillez sélectionner un type de projet de base")
+});
+
+type MasterShellFormValues = z.infer<typeof masterShellFormSchema>;
+type TemplateFormValues = z.infer<typeof templateFormSchema>;
 
 const Index = () => {
   const [selectedProjectType, setSelectedProjectType] = useState<string | null>(null);
   const [showTemplatesSheet, setShowTemplatesSheet] = useState(false);
   const [showSettingsSheet, setShowSettingsSheet] = useState(false);
+  const [showCreateTemplateDialog, setShowCreateTemplateDialog] = useState(false);
+  const [masterShellPath, setMasterShellPath] = useState<string>("");
+  const [templates, setTemplates] = useState<Array<{id: string, name: string, description: string, baseType: string}>>([]);
+  
+  // Initialize our forms
+  const masterShellForm = useForm<MasterShellFormValues>({
+    resolver: zodResolver(masterShellFormSchema),
+    defaultValues: {
+      masterShellPath: "",
+    },
+  });
+
+  const templateForm = useForm<TemplateFormValues>({
+    resolver: zodResolver(templateFormSchema),
+    defaultValues: {
+      templateName: "",
+      templateDescription: "",
+      templateBaseType: ""
+    },
+  });
+
+  // Load saved settings on component mount
+  useEffect(() => {
+    // In a real app, this would load from localStorage or a server
+    const savedMasterShellPath = localStorage.getItem("masterShellPath");
+    if (savedMasterShellPath) {
+      setMasterShellPath(savedMasterShellPath);
+      masterShellForm.setValue("masterShellPath", savedMasterShellPath);
+    }
+    
+    const savedTemplates = localStorage.getItem("projectTemplates");
+    if (savedTemplates) {
+      setTemplates(JSON.parse(savedTemplates));
+    }
+  }, []);
 
   const handleSelectProjectType = (typeId: string) => {
     setSelectedProjectType(typeId);
@@ -29,6 +86,53 @@ const Index = () => {
     setShowSettingsSheet(true);
   };
 
+  const handleCreateTemplateClick = () => {
+    setShowCreateTemplateDialog(true);
+    setShowTemplatesSheet(false);
+  };
+
+  const onSaveMasterShellPath = (data: MasterShellFormValues) => {
+    setMasterShellPath(data.masterShellPath);
+    localStorage.setItem("masterShellPath", data.masterShellPath);
+    toast({
+      title: "Paramètres enregistrés",
+      description: "Le dossier MasterShell a été configuré avec succès.",
+    });
+  };
+
+  const onCreateTemplate = (data: TemplateFormValues) => {
+    const newTemplate = {
+      id: Date.now().toString(),
+      name: data.templateName,
+      description: data.templateDescription,
+      baseType: data.templateBaseType
+    };
+    
+    const updatedTemplates = [...templates, newTemplate];
+    setTemplates(updatedTemplates);
+    localStorage.setItem("projectTemplates", JSON.stringify(updatedTemplates));
+    
+    setShowCreateTemplateDialog(false);
+    templateForm.reset();
+    
+    toast({
+      title: "Template créé",
+      description: `Le template "${data.templateName}" a été créé avec succès.`,
+    });
+  };
+
+  const handleSelectTemplate = (templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      setSelectedProjectType(template.baseType);
+      setShowTemplatesSheet(false);
+      toast({
+        title: "Template sélectionné",
+        description: `Le template "${template.name}" a été sélectionné.`,
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col p-6">
       <header className="mb-12">
@@ -36,18 +140,16 @@ const Index = () => {
           <Logo size="lg" className="animate-float" />
           <div className="flex gap-3">
             <Button 
-              variant="outline" 
-              size="sm" 
-              className="flex items-center gap-2 border-2 border-transparent hover:border-oneblaze-green-hover hover:bg-oneblaze-dark hover:text-oneblaze-green-hover" 
+              className="oneblaze-button" 
+              size="sm"
               onClick={handleTemplatesClick}
             >
               <Dices size={18} />
               <span className="hidden sm:inline">Templates</span>
             </Button>
             <Button 
-              variant="outline" 
-              size="sm" 
-              className="flex items-center gap-2 border-2 border-transparent hover:border-oneblaze-green-hover hover:bg-oneblaze-dark hover:text-oneblaze-green-hover" 
+              className="oneblaze-button" 
+              size="sm"
               onClick={handleSettingsClick}
             >
               <Settings size={18} />
@@ -97,17 +199,40 @@ const Index = () => {
             </SheetDescription>
           </SheetHeader>
           <div className="mt-6 space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Cette fonctionnalité vous permettra de créer, modifier et appliquer des templates personnalisés pour vos différents types de projets.
-            </p>
-            <div className="border rounded-lg p-4 bg-muted/10">
-              <h3 className="text-lg font-medium mb-2">Fonctionnalités à venir</h3>
-              <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                <li>Créer des templates personnalisés</li>
-                <li>Importer des templates existants</li>
-                <li>Modifier la structure des dossiers et fichiers</li>
-                <li>Partager des templates avec votre équipe</li>
-              </ul>
+            <div className="flex justify-end mb-4">
+              <Button className="oneblaze-button" onClick={handleCreateTemplateClick}>
+                <FileEdit size={16} className="mr-2" />
+                Créer un template
+              </Button>
+            </div>
+            
+            {templates.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">Aucun template personnalisé disponible</p>
+                <p className="text-sm mt-2">Créez votre premier template pour accélérer vos projets futurs</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <h3 className="text-lg font-medium">Templates disponibles</h3>
+                {templates.map(template => (
+                  <div 
+                    key={template.id}
+                    className="border rounded-lg p-4 bg-muted/10 hover:bg-muted/20 cursor-pointer transition-colors"
+                    onClick={() => handleSelectTemplate(template.id)}
+                  >
+                    <h4 className="font-medium">{template.name}</h4>
+                    <p className="text-sm text-muted-foreground">{template.description}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            <div className="border rounded-lg p-4 bg-muted/10 mt-8">
+              <h3 className="text-lg font-medium mb-2">À propos des templates</h3>
+              <p className="text-sm text-muted-foreground">
+                Les templates vous permettent de sauvegarder et réutiliser des structures de projets personnalisées.
+                Créez un template à partir d'un type de projet existant et personnalisez-le selon vos besoins.
+              </p>
             </div>
           </div>
         </SheetContent>
@@ -122,19 +247,55 @@ const Index = () => {
               Configurez votre application Project Forge
             </SheetDescription>
           </SheetHeader>
-          <div className="mt-6 space-y-4">
-            <div className="border rounded-lg p-4 bg-muted/10">
-              <h3 className="text-lg font-medium mb-2">Emplacements par défaut</h3>
-              <p className="text-sm text-muted-foreground mb-2">
-                Ces paramètres seront bientôt configurables pour personnaliser les emplacements de création des projets.
-              </p>
+          <div className="mt-6 space-y-6">
+            <div className="border rounded-lg p-5 bg-muted/10">
+              <h3 className="text-lg font-medium mb-4">Emplacement MasterShell</h3>
+              <Form {...masterShellForm}>
+                <form onSubmit={masterShellForm.handleSubmit(onSaveMasterShellPath)} className="space-y-4">
+                  <FormField
+                    control={masterShellForm.control}
+                    name="masterShellPath"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Chemin du dossier MasterShell</FormLabel>
+                        <div className="flex gap-2">
+                          <FormControl>
+                            <Input 
+                              placeholder="/chemin/vers/votre/dossier/MasterShell" 
+                              className="oneblaze-input flex-1"
+                              {...field} 
+                            />
+                          </FormControl>
+                          <Button type="button" className="oneblaze-button" onClick={() => {
+                            // In a real electron app, this would open a folder picker
+                            const mockPath = "/Users/mathisoneblaze/Documents/MasterShell";
+                            masterShellForm.setValue("masterShellPath", mockPath);
+                          }}>
+                            <FolderPlus size={16} />
+                          </Button>
+                        </div>
+                        <FormDescription>
+                          Ce dossier contiendra tous vos projets créés avec Project Forge
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="oneblaze-button w-full">
+                    <CheckCircle size={16} className="mr-2" />
+                    Enregistrer les paramètres
+                  </Button>
+                </form>
+              </Form>
             </div>
+            
             <div className="border rounded-lg p-4 bg-muted/10">
               <h3 className="text-lg font-medium mb-2">Apparence</h3>
               <p className="text-sm text-muted-foreground mb-2">
                 Les options de personnalisation de l'interface seront disponibles dans une prochaine mise à jour.
               </p>
             </div>
+            
             <div className="border rounded-lg p-4 bg-muted/10">
               <h3 className="text-lg font-medium mb-2">À propos</h3>
               <p className="text-sm text-muted-foreground">
@@ -148,6 +309,86 @@ const Index = () => {
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Create Template Dialog */}
+      <Dialog open={showCreateTemplateDialog} onOpenChange={setShowCreateTemplateDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Créer un nouveau template</DialogTitle>
+            <DialogDescription>
+              Définissez les détails de votre nouveau template de projet
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...templateForm}>
+            <form onSubmit={templateForm.handleSubmit(onCreateTemplate)} className="space-y-4">
+              <FormField
+                control={templateForm.control}
+                name="templateName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nom du template</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Mon template personnalisé" className="oneblaze-input" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={templateForm.control}
+                name="templateDescription"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Décrivez à quoi sert ce template" className="oneblaze-input" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={templateForm.control}
+                name="templateBaseType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Type de projet de base</FormLabel>
+                    <FormControl>
+                      <select 
+                        className="oneblaze-input w-full h-10 px-3 rounded-xl"
+                        {...field}
+                      >
+                        <option value="">Sélectionnez un type de projet</option>
+                        <option value="video">Projet Vidéo</option>
+                        <option value="motion">Motion Design</option>
+                        <option value="photo">Projet Photo</option>
+                        <option value="web">Projet Web</option>
+                      </select>
+                    </FormControl>
+                    <FormDescription>
+                      Choisissez le type de projet sur lequel ce template sera basé
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setShowCreateTemplateDialog(false)}>
+                  Annuler
+                </Button>
+                <Button type="submit" className="oneblaze-button">
+                  <FileEdit size={16} className="mr-2" />
+                  Créer le template
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
