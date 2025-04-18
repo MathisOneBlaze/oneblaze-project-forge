@@ -34,13 +34,23 @@ const templateFormSchema = z.object({
 type MasterShellFormValues = z.infer<typeof masterShellFormSchema>;
 type TemplateFormValues = z.infer<typeof templateFormSchema>;
 
+// Define the template interface
+interface Template {
+  id: string;
+  name: string;
+  description: string;
+  baseType: string;
+  creationType?: 'copy' | 'new';
+  baseTemplateId?: string;
+}
+
 const Index = () => {
   const [selectedProjectType, setSelectedProjectType] = useState<string | null>(null);
   const [showTemplatesSheet, setShowTemplatesSheet] = useState(false);
   const [showSettingsSheet, setShowSettingsSheet] = useState(false);
   const [showCreateTemplateDialog, setShowCreateTemplateDialog] = useState(false);
   const [masterShellPath, setMasterShellPath] = useState<string>("");
-  const [templates, setTemplates] = useState<Array<{id: string, name: string, description: string, baseType: string}>>([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
   
   // Initialize our forms
   const masterShellForm = useForm<MasterShellFormValues>({
@@ -105,7 +115,7 @@ const Index = () => {
   };
 
   const onCreateTemplate = (data: TemplateFormValues) => {
-    const newTemplate = {
+    const newTemplate: Template = {
       id: Date.now().toString(),
       name: data.templateName,
       description: data.templateDescription,
@@ -120,10 +130,7 @@ const Index = () => {
       const baseTemplate = templates.find(t => t.id === data.baseTemplate);
       if (baseTemplate) {
         // In a real app, this would copy the folder structure as well
-        updatedTemplates.push({
-          ...newTemplate,
-          structure: baseTemplate.structure,
-        });
+        updatedTemplates.push(newTemplate);
       }
     } else {
       updatedTemplates.push(newTemplate);

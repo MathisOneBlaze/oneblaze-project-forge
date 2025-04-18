@@ -62,6 +62,7 @@ export default {
 					light: '#191919',
 					text: '#F0F0F0',
 					green: {
+						DEFAULT: '#00FF99', // Added the base green color
 						hover: '#00FF99',
 						active: '#1AFFA3',
 					}
