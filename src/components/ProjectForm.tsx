@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import ProjectFormBody from './ProjectFormBody';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { useProjectStructure } from '@/hooks/use-project-structure';
 
 interface ProjectFormProps {
   projectType: string;
@@ -12,6 +13,7 @@ interface ProjectFormProps {
 
 const ProjectForm: React.FC<ProjectFormProps> = ({ projectType, onBack }) => {
   const { toast } = useToast();
+  const { createProject } = useProjectStructure();
   
   const getProjectTypeName = (type: string) => {
     const typeNames: Record<string, string> = {
@@ -30,16 +32,12 @@ const ProjectForm: React.FC<ProjectFormProps> = ({ projectType, onBack }) => {
     return typeNames[type] || 'Projet';
   };
   
-  const handleSubmit = (projectData: any) => {
+  const handleSubmit = async (projectData: any) => {
     console.log('Données du formulaire:', projectData);
-    
-    // Simuler la création du projet
-    setTimeout(() => {
-      toast({
-        title: "Projet créé avec succès !",
-        description: `Le projet "${projectData.title}" a été créé dans ${projectData.location}/${projectData.folderName}`,
-      });
-    }, 1500);
+    await createProject({
+      ...projectData,
+      projectType
+    });
   };
   
   return (

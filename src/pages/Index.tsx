@@ -15,8 +15,8 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import CreateTemplateDialog from '@/components/CreateTemplateDialog';
+import ElectronDetector from '@/components/ElectronDetector';
 
-// Define schemas for our forms
 const masterShellFormSchema = z.object({
   masterShellPath: z.string().min(1, "Le chemin du dossier MasterShell est requis")
 });
@@ -34,7 +34,6 @@ const templateFormSchema = z.object({
 type MasterShellFormValues = z.infer<typeof masterShellFormSchema>;
 type TemplateFormValues = z.infer<typeof templateFormSchema>;
 
-// Define the template interface
 interface Template {
   id: string;
   name: string;
@@ -52,7 +51,6 @@ const Index = () => {
   const [masterShellPath, setMasterShellPath] = useState<string>("");
   const [templates, setTemplates] = useState<Template[]>([]);
   
-  // Initialize our forms
   const masterShellForm = useForm<MasterShellFormValues>({
     resolver: zodResolver(masterShellFormSchema),
     defaultValues: {
@@ -69,9 +67,7 @@ const Index = () => {
     },
   });
 
-  // Load saved settings on component mount
   useEffect(() => {
-    // In a real app, this would load from localStorage or a server
     const savedMasterShellPath = localStorage.getItem("masterShellPath");
     if (savedMasterShellPath) {
       setMasterShellPath(savedMasterShellPath);
@@ -129,7 +125,6 @@ const Index = () => {
     if (data.creationType === 'copy' && data.baseTemplate) {
       const baseTemplate = templates.find(t => t.id === data.baseTemplate);
       if (baseTemplate) {
-        // In a real app, this would copy the folder structure as well
         updatedTemplates.push(newTemplate);
       }
     } else {
@@ -189,6 +184,7 @@ const Index = () => {
             <p className="text-muted-foreground mb-8">
               Créez rapidement une structure de projet avec tous les dossiers et fichiers nécessaires pour votre workflow créatif
             </p>
+            <ElectronDetector />
           </div>
         )}
       </header>
@@ -214,7 +210,6 @@ const Index = () => {
         </p>
       </footer>
 
-      {/* Templates Sheet */}
       <Sheet open={showTemplatesSheet} onOpenChange={setShowTemplatesSheet}>
         <SheetContent>
           <SheetHeader>
@@ -263,7 +258,6 @@ const Index = () => {
         </SheetContent>
       </Sheet>
 
-      {/* Settings Sheet */}
       <Sheet open={showSettingsSheet} onOpenChange={setShowSettingsSheet}>
         <SheetContent>
           <SheetHeader>
@@ -292,7 +286,6 @@ const Index = () => {
                             />
                           </FormControl>
                           <Button type="button" className="oneblaze-button" onClick={() => {
-                            // In a real electron app, this would open a folder picker
                             const mockPath = "/Users/mathisoneblaze/Documents/MasterShell";
                             masterShellForm.setValue("masterShellPath", mockPath);
                           }}>
@@ -335,7 +328,6 @@ const Index = () => {
         </SheetContent>
       </Sheet>
 
-      {/* Create Template Dialog */}
       <CreateTemplateDialog
         open={showCreateTemplateDialog}
         onOpenChange={setShowCreateTemplateDialog}
