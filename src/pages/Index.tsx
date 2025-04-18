@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Logo from '@/components/Logo';
 import ProjectTypeSelection from '@/components/ProjectTypeSelection';
@@ -15,6 +14,7 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormDescription, For
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import CreateTemplateDialog from '@/components/CreateTemplateDialog';
 
 // Define schemas for our forms
 const masterShellFormSchema = z.object({
@@ -24,7 +24,11 @@ const masterShellFormSchema = z.object({
 const templateFormSchema = z.object({
   templateName: z.string().min(3, "Le nom du template doit contenir au moins 3 caractères"),
   templateDescription: z.string().min(10, "La description doit contenir au moins 10 caractères"),
-  templateBaseType: z.string().min(1, "Veuillez sélectionner un type de projet de base")
+  templateBaseType: z.string().min(1, "Veuillez sélectionner un type de projet de base"),
+  creationType: z.enum(['copy', 'new'], {
+    required_error: "Veuillez choisir un type de création",
+  }),
+  baseTemplate: z.string().optional(),
 });
 
 type MasterShellFormValues = z.infer<typeof masterShellFormSchema>;
@@ -105,15 +109,29 @@ const Index = () => {
       id: Date.now().toString(),
       name: data.templateName,
       description: data.templateDescription,
-      baseType: data.templateBaseType
+      baseType: data.templateBaseType,
+      creationType: data.creationType,
+      baseTemplateId: data.baseTemplate,
     };
     
-    const updatedTemplates = [...templates, newTemplate];
+    const updatedTemplates = [...templates];
+    
+    if (data.creationType === 'copy' && data.baseTemplate) {
+      const baseTemplate = templates.find(t => t.id === data.baseTemplate);
+      if (baseTemplate) {
+        // In a real app, this would copy the folder structure as well
+        updatedTemplates.push({
+          ...newTemplate,
+          structure: baseTemplate.structure,
+        });
+      }
+    } else {
+      updatedTemplates.push(newTemplate);
+    }
+    
     setTemplates(updatedTemplates);
     localStorage.setItem("projectTemplates", JSON.stringify(updatedTemplates));
-    
     setShowCreateTemplateDialog(false);
-    templateForm.reset();
     
     toast({
       title: "Template créé",
@@ -311,84 +329,12 @@ const Index = () => {
       </Sheet>
 
       {/* Create Template Dialog */}
-      <Dialog open={showCreateTemplateDialog} onOpenChange={setShowCreateTemplateDialog}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Créer un nouveau template</DialogTitle>
-            <DialogDescription>
-              Définissez les détails de votre nouveau template de projet
-            </DialogDescription>
-          </DialogHeader>
-          
-          <Form {...templateForm}>
-            <form onSubmit={templateForm.handleSubmit(onCreateTemplate)} className="space-y-4">
-              <FormField
-                control={templateForm.control}
-                name="templateName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Nom du template</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Mon template personnalisé" className="oneblaze-input" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={templateForm.control}
-                name="templateDescription"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Description</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Décrivez à quoi sert ce template" className="oneblaze-input" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={templateForm.control}
-                name="templateBaseType"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Type de projet de base</FormLabel>
-                    <FormControl>
-                      <select 
-                        className="oneblaze-input w-full h-10 px-3 rounded-xl"
-                        {...field}
-                      >
-                        <option value="">Sélectionnez un type de projet</option>
-                        <option value="video">Projet Vidéo</option>
-                        <option value="motion">Motion Design</option>
-                        <option value="photo">Projet Photo</option>
-                        <option value="web">Projet Web</option>
-                      </select>
-                    </FormControl>
-                    <FormDescription>
-                      Choisissez le type de projet sur lequel ce template sera basé
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setShowCreateTemplateDialog(false)}>
-                  Annuler
-                </Button>
-                <Button type="submit" className="oneblaze-button">
-                  <FileEdit size={16} className="mr-2" />
-                  Créer le template
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+      <CreateTemplateDialog
+        open={showCreateTemplateDialog}
+        onOpenChange={setShowCreateTemplateDialog}
+        onCreateTemplate={onCreateTemplate}
+        existingTemplates={templates}
+      />
     </div>
   );
 };
